@@ -1,20 +1,34 @@
 export * from "./domain.types"
 
-export interface IOrderFilterQuery {
-  page?: number
-  limit?: number
-  status?: string
-  search?: string
-  fromDate?: string
-  toDate?: string
-}
+export type {
+  IApiSuccess,
+  IApiError,
+  ApiResponse,
+  IPaginationMeta,
+  ILoginDTO,
+  IRegisterDTO,
+  ILoginResponse,
+  IJwtPayload,
+  IPaginationQuery,
+  IOrderFilterQuery,
+  IInventoryFilterQuery,
+  IOrderCreateDTO,
+  IOrderUpdateDTO,
+  IDeliveryUpdateDTO,
+  IStockAdjustDTO,
+  IBulkAdjustItem,
+  IBulkAdjustDTO,
+  IBulkAdjustResult,
+  IBulkDeliveryUpdateItem,
+  IBulkDeliveryUpdateDTO,
+  IBulkDeliveryUpdateResult,
+  IDashboardSummary,
+  IOrdersByStatus,
+  IOrdersByDay,
+  ILowStockAlert,
+} from "@workspace/shared"
 
-export interface IDeliveryUpdateDTO {
-  status: string
-  location?: string
-  note?: string
-}
-
+// FE-only helper types (not in shared)
 export interface IInventoryMatrixCell {
   productId: string
   warehouseId: string
@@ -30,28 +44,11 @@ export interface IInventoryMatrixData {
 }
 
 export interface ITimelineItem {
-  status: import("./domain.types").OrderStatus
+  status: import("@workspace/shared").OrderStatus
   label: string
   timestamp?: Date
   location?: string
   note?: string
   isCompleted: boolean
   isCurrent: boolean
-}
-
-export interface IDashboardSummary {
-  totalOrders: number
-  inTransit: number
-  delivered: number
-  totalRevenue: number
-}
-
-export interface IOrdersByStatus {
-  status: import("./domain.types").OrderStatus
-  count: number
-}
-
-export interface IOrdersByDay {
-  date: string
-  count: number
 }

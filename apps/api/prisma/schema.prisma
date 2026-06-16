@@ -1,0 +1,262 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============ USER & AUTH ============
+
+model User {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  passwordHash String
+  fullName     String
+  role         Role            @default(CUSTOMER)
+  phone        String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  orders       Order[]         @relation("OrderCreatedBy")
+  movements    StockMovement[]
+}
+
+enum Role {
+  CUSTOMER
+  STAFF
+  ADMIN
+}
+
+// ============ CUSTOMER ============
+
+model Customer {
+  id        String    @id @default(cuid())
+  fullName  String
+  email     String    @unique
+  phone     String
+  addresses Address[]
+  orders    Order[]
+  createdAt DateTime  @default(now())
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  line1      String
+  ward       String?
+  district   String
+  city       String
+  country    String   @default("VN")
+  postalCode String?
+  isDefault  Boolean  @default(false)
+}
+
+// ============ PRODUCT ============
+
+model Category {
+  id       String     @id @default(cuid())
+  name     String     @unique
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  sku         String      @unique
+  name        String
+  description String?
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id])
+  unitPrice   Float
+  unit        String      @default("piece")
+  weight      Float?
+  hsCode      String?
+  imageUrl    String?
+  inventory   Inventory[]
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+// ============ WAREHOUSE & INVENTORY ============
+
+model Warehouse {
+  id        String        @id @default(cuid())
+  code      String        @unique
+  name      String
+  address   String
+  city      String
+  type      WarehouseType @default(GENERAL)
+  inventory Inventory[]
+  createdAt DateTime      @default(now())
+}
+
+enum WarehouseType {
+  GENERAL
+  BONDED
+  CFS
+  ICD
+  COLD_STORAGE
+}
+
+model Inventory {
+  id           String          @id @default(cuid())
+  productId    String
+  product      Product         @relation(fields: [productId], references: [id])
+  warehouseId  String
+  warehouse    Warehouse       @relation(fields: [warehouseId], references: [id])
+  stock        Int             @default(0)
+  reserved     Int             @default(0)
+  lowThreshold Int             @default(10)
+  updatedAt    DateTime        @updatedAt
+  movements    StockMovement[]
+
+  @@unique([productId, warehouseId])
+}
+
+model StockMovement {
+  id            String       @id @default(cuid())
+  inventoryId   String
+  inventory     Inventory    @relation(fields: [inventoryId], references: [id])
+  type          MovementType
+  quantity      Int
+  reason        String
+  referenceNo   String?
+  performedById String?
+  performedBy   User?        @relation(fields: [performedById], references: [id])
+  createdAt     DateTime     @default(now())
+}
+
+enum MovementType {
+  INBOUND
+  OUTBOUND
+  ADJUSTMENT
+  TRANSFER
+  RETURN
+}
+
+// ============ ORDER ============
+
+model Order {
+  id              String      @id @default(cuid())
+  trackingNo      String      @unique
+  customerId      String
+  customer        Customer    @relation(fields: [customerId], references: [id])
+  createdById     String
+  createdBy       User        @relation("OrderCreatedBy", fields: [createdById], references: [id])
+  status          OrderStatus @default(PENDING)
+  totalAmount     Float
+  currency        String      @default("VND")
+  shippingAddress String
+  notes           String?
+  items           OrderItem[]
+  shipments       Shipment[]
+  deliveries      Delivery[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PACKED
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  RETURNED
+  CANCELLED
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Float
+  subtotal  Float
+}
+
+// ============ SHIPMENT & MULTIMODAL ============
+
+model Carrier {
+  id        String      @id @default(cuid())
+  code      String      @unique
+  name      String
+  type      CarrierType
+  contact   String?
+  shipments Shipment[]
+}
+
+enum CarrierType {
+  ROAD
+  RAIL
+  SEA
+  AIR
+  INLAND_WATERWAY
+}
+
+model Shipment {
+  id          String         @id @default(cuid())
+  orderId     String
+  order       Order          @relation(fields: [orderId], references: [id])
+  carrierId   String
+  carrier     Carrier        @relation(fields: [carrierId], references: [id])
+  shipmentNo  String         @unique
+  mode        ShippingMode
+  origin      String
+  destination String
+  etaDate     DateTime?
+  actualDate  DateTime?
+  cost        Float?
+  legs        TransportLeg[]
+  createdAt   DateTime       @default(now())
+}
+
+enum ShippingMode {
+  ROAD
+  RAIL
+  SEA
+  AIR
+  MULTIMODAL
+}
+
+model TransportLeg {
+  id         String       @id @default(cuid())
+  shipmentId String
+  shipment   Shipment     @relation(fields: [shipmentId], references: [id])
+  sequence   Int
+  mode       ShippingMode
+  fromPoint  String
+  toPoint    String
+  carrier    String?
+  startTime  DateTime?
+  endTime    DateTime?
+  status     LegStatus    @default(PLANNED)
+}
+
+enum LegStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  DELAYED
+}
+
+// ============ DELIVERY LOG ============
+
+model Delivery {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id])
+  status    OrderStatus
+  location  String?
+  note      String?
+  updatedBy String?
+  createdAt DateTime    @default(now())
+
+  @@index([orderId, createdAt])
+}

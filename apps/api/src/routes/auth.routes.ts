@@ -9,6 +9,13 @@ import { env } from "../config/env"
 
 const router: Router = Router()
 
+const isProd = env.NODE_ENV === "production"
+const cookieOptions = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? ("none" as const) : ("lax" as const),
+}
+
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
@@ -33,9 +40,7 @@ router.post(
       }
       const result = await authService.login(email, password)
       res.cookie("token", result.token, {
-        httpOnly: true,
-        secure: env.NODE_ENV === "production",
-        sameSite: "lax",
+        ...cookieOptions,
         maxAge: 24 * 60 * 60 * 1000,
       })
       ok(res, { user: result.user, expiresAt: result.expiresAt })
@@ -64,7 +69,7 @@ router.post(
 )
 
 router.post("/logout", requireAuth, (_req, res) => {
-  res.clearCookie("token")
+  res.clearCookie("token", cookieOptions)
   ok(res, { message: "Đăng xuất thành công" })
 })
 

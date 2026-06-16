@@ -1,28 +1,39 @@
 "use client"
 
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, MapPin, Phone, Mail, Package, Calendar } from "lucide-react"
+import { ArrowLeft, MapPin, Phone, Mail, Package, Calendar, Loader2 } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Separator } from "@workspace/ui/components/separator"
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge"
 import { OrderTimeline } from "@/components/orders/OrderTimeline"
-import { mockOrders } from "@/lib/mock-data"
+import { useTrackOrder } from "@/hooks/useOrders"
 import { formatCurrency, formatDate } from "@/lib/utils"
 
 export default function TrackDetailPage() {
   const { trackingNo } = useParams<{ trackingNo: string }>()
   const router = useRouter()
 
-  const order = mockOrders.find((o) => o.trackingNo === trackingNo)
+  const { data: order, isLoading, error } = useTrackOrder(trackingNo)
 
-  if (!order) {
+  if (isLoading) {
+    return (
+      <div className="container mx-auto max-w-lg py-16 px-4 flex flex-col items-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Đang tra cứu đơn hàng...</p>
+      </div>
+    )
+  }
+
+  if (error || !order) {
     return (
       <div className="container mx-auto max-w-lg py-16 px-4 text-center">
         <Package className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">Không tìm thấy đơn hàng</h2>
         <p className="text-muted-foreground text-sm mb-6">
-          Mã vận đơn <code className="bg-muted px-1 rounded font-mono">{trackingNo}</code> không tồn tại trong hệ thống.
+          Mã vận đơn{" "}
+          <code className="bg-muted px-1 rounded font-mono">{trackingNo}</code>{" "}
+          không tồn tại trong hệ thống.
         </p>
         <Button variant="outline" onClick={() => router.push("/track")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -32,11 +43,16 @@ export default function TrackDetailPage() {
     )
   }
 
-  const latestShipment = order.shipments[0]
+  const latestShipment = order.shipments?.[0]
 
   return (
     <div className="container mx-auto max-w-3xl py-8 px-4 space-y-4">
-      <Button variant="ghost" size="sm" onClick={() => router.back()} className="-ml-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => router.back()}
+        className="-ml-2"
+      >
         <ArrowLeft className="h-4 w-4 mr-1" />
         Quay lại
       </Button>
@@ -57,30 +73,30 @@ export default function TrackDetailPage() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <Package className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="font-medium">{order.customerName}</span>
+                <span className="font-medium">{order.customer.fullName}</span>
               </div>
-              {order.customerPhone && (
+              {order.customer.phone && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Phone className="h-4 w-4 shrink-0" />
-                  {order.customerPhone}
+                  {order.customer.phone}
                 </div>
               )}
-              {order.customerEmail && (
+              {order.customer.email && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Mail className="h-4 w-4 shrink-0" />
-                  {order.customerEmail}
+                  {order.customer.email}
                 </div>
               )}
             </div>
             <div className="space-y-2">
               <div className="flex items-start gap-2 text-sm">
                 <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                <span>{order.deliveryAddress}, {order.city}</span>
+                <span>{order.shippingAddress}</span>
               </div>
-              {latestShipment?.estimatedDelivery && (
+              {latestShipment?.etaDate && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4 shrink-0" />
-                  Dự kiến giao: {formatDate(latestShipment.estimatedDelivery)}
+                  Dự kiến giao: {formatDate(latestShipment.etaDate)}
                 </div>
               )}
             </div>
@@ -94,7 +110,10 @@ export default function TrackDetailPage() {
           <CardTitle className="text-base">Lịch sử vận chuyển</CardTitle>
         </CardHeader>
         <CardContent>
-          <OrderTimeline deliveries={order.deliveries} currentStatus={order.status} />
+          <OrderTimeline
+            deliveries={order.deliveries ?? []}
+            currentStatus={order.status}
+          />
         </CardContent>
       </Card>
 
@@ -106,14 +125,21 @@ export default function TrackDetailPage() {
         <CardContent>
           <div className="space-y-2">
             {order.items.map((item) => (
-              <div key={item.id} className="flex items-center justify-between text-sm py-2">
+              <div
+                key={item.id}
+                className="flex items-center justify-between text-sm py-2"
+              >
                 <div>
                   <p className="font-medium">{item.product.name}</p>
-                  <p className="text-xs text-muted-foreground">{item.product.sku} · {item.product.unit}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {item.product.sku} · {item.product.unit}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p>SL: {item.quantity}</p>
-                  <p className="text-muted-foreground">{formatCurrency(item.unitPrice)}/{item.product.unit}</p>
+                  <p className="text-muted-foreground">
+                    {formatCurrency(item.unitPrice)}/{item.product.unit}
+                  </p>
                 </div>
               </div>
             ))}

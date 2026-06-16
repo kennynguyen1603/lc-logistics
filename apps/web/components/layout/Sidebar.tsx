@@ -30,6 +30,7 @@ const ADMIN_NAV = [
 export function Sidebar() {
   const pathname = usePathname()
   const { user, logout } = useAuthStore()
+  const handleLogout = () => { void logout() }
   const nav = user?.role === "ADMIN" ? ADMIN_NAV : STAFF_NAV
 
   return (
@@ -43,7 +44,7 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
         {nav.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname === href || pathname.startsWith(href + "/")
+          const isActive = pathname === href || (href !== "/admin/inventory" && pathname.startsWith(href + "/"))
           return (
             <Link
               key={href}
@@ -66,14 +67,14 @@ export function Sidebar() {
       {/* User section */}
       <div className="border-t p-3">
         <div className="mb-2 px-1">
-          <p className="text-xs font-medium truncate">{user?.name}</p>
+          <p className="text-xs font-medium truncate">{user?.fullName}</p>
           <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
         </div>
         <Button
           variant="ghost"
           size="sm"
           className="w-full justify-start gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-          onClick={logout}
+          onClick={handleLogout}
         >
           <LogOut className="h-4 w-4" />
           Đăng xuất

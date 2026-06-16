@@ -6,7 +6,13 @@ import { Truck, Eye, EyeOff } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card"
 import { useAuthStore } from "@/stores/auth.store"
 import Link from "next/link"
 
@@ -30,9 +36,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-background p-4">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-primary/5 to-background p-4">
       <div className="w-full max-w-sm">
-        <div className="flex items-center justify-center gap-2 mb-8">
+        <div className="mb-8 flex items-center justify-center gap-2">
           <Truck className="h-7 w-7 text-primary" />
           <span className="text-xl font-bold">LC Logistics</span>
         </div>
@@ -40,7 +46,9 @@ export default function LoginPage() {
         <Card>
           <CardHeader>
             <CardTitle>Đăng nhập</CardTitle>
-            <CardDescription>Nhập thông tin tài khoản để truy cập hệ thống</CardDescription>
+            <CardDescription>
+              Nhập thông tin tài khoản để truy cập hệ thống
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -71,15 +79,19 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>
 
               {error && (
-                <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
+                <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                   {error}
                 </div>
               )}
@@ -89,18 +101,30 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-4 rounded-lg bg-muted/50 p-3 space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">Tài khoản demo:</p>
-              <p className="text-xs font-mono">admin@logistics.vn / admin123 (Admin)</p>
-              <p className="text-xs font-mono">staff1@logistics.vn / staff123 (Staff)</p>
+            <div className="mt-4 space-y-1 rounded-lg bg-muted/50 p-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                Tài khoản demo:
+              </p>
+              <p className="font-mono text-xs">
+                admin@lclogistics.vn / Admin@123
+              </p>
+              <p className="font-mono text-xs">
+                staff@lclogistics.vn / Staff@123
+              </p>
             </div>
 
-            <p className="text-center text-xs text-muted-foreground mt-4">
-              <Link href="/" className="hover:text-foreground underline-offset-4 hover:underline">
+            <p className="mt-4 text-center text-xs text-muted-foreground">
+              <Link
+                href="/"
+                className="underline-offset-4 hover:text-foreground hover:underline"
+              >
                 ← Trang chủ
               </Link>
               {" · "}
-              <Link href="/register" className="hover:text-foreground underline-offset-4 hover:underline">
+              <Link
+                href="/register"
+                className="underline-offset-4 hover:text-foreground hover:underline"
+              >
                 Đăng ký tài khoản
               </Link>
             </p>

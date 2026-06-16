@@ -12,16 +12,20 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
-  const { user, isAuthenticated, isLoading } = useAuthStore()
+  const { user, isAuthenticated, isChecking, initAuth } = useAuthStore()
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    initAuth()
+  }, [initAuth])
+
+  useEffect(() => {
+    if (!isChecking && !isAuthenticated) {
       router.replace("/login")
     }
-  }, [isAuthenticated, isLoading, router])
+  }, [isAuthenticated, isChecking, router])
 
-  if (isLoading) {
+  if (isChecking) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

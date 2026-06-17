@@ -1,0 +1,740 @@
+{
+  "info": {
+    "name": "LC Logistics API",
+    "_postman_id": "lc-logistics-2026",
+    "description": "Full API collection for LC Logistics system.\n\n**Setup:**\n1. Import collection + environment\n2. Select environment `LC Logistics - Local`\n3. Run **Auth / Login** → token tự động lưu vào biến `token`\n4. Tất cả request còn lại gọi thẳng là được\n\n**Demo credentials:**\n- Admin: `admin@lc.com` / `admin123`\n- Staff: `staff@lc.com` / `staff123`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Extract token from Set-Cookie header",
+                  "const setCookie = pm.response.headers.get('Set-Cookie');",
+                  "if (setCookie) {",
+                  "    const match = setCookie.match(/token=([^;]+)/);",
+                  "    if (match) {",
+                  "        pm.environment.set('token', match[1]);",
+                  "        console.log('✅ Token saved');",
+                  "    }",
+                  "}",
+                  "",
+                  "// Save user info",
+                  "const json = pm.response.json();",
+                  "if (json.success) {",
+                  "    pm.environment.set('userId', json.data.user.id);",
+                  "    pm.environment.set('userRole', json.data.user.role);",
+                  "    console.log('Role:', json.data.user.role);",
+                  "}",
+                  "",
+                  "pm.test('Login thành công', () => pm.response.to.have.status(200));",
+                  "pm.test('Có token trong cookie', () => pm.expect(setCookie).to.include('token='));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@lc.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"New User\",\n  \"phone\": \"0901234567\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Me (profile)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.environment.unset('token');",
+                  "pm.environment.unset('userId');",
+                  "pm.test('Logout thành công', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/logout", "host": ["{{baseUrl}}"], "path": ["api", "auth", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Summary (week/today/month)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard/summary?period=week",
+              "host": ["{{baseUrl}}"], "path": ["api", "dashboard", "summary"],
+              "query": [{ "key": "period", "value": "week", "description": "today | week | month" }]
+            }
+          }
+        },
+        {
+          "name": "Orders by status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/dashboard/orders-by-status", "host": ["{{baseUrl}}"], "path": ["api", "dashboard", "orders-by-status"] }
+          }
+        },
+        {
+          "name": "Orders by day (7 ngày)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard/orders-by-day?days=7",
+              "host": ["{{baseUrl}}"], "path": ["api", "dashboard", "orders-by-day"],
+              "query": [{ "key": "days", "value": "7", "description": "7–30" }]
+            }
+          }
+        },
+        {
+          "name": "Low stock alerts",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/dashboard/low-stock", "host": ["{{baseUrl}}"], "path": ["api", "dashboard", "low-stock"] }
+          }
+        },
+        {
+          "name": "Recent orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard/recent-orders?limit=10",
+              "host": ["{{baseUrl}}"], "path": ["api", "dashboard", "recent-orders"],
+              "query": [{ "key": "limit", "value": "10" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "List orders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data.length > 0) {",
+                  "    pm.environment.set('orderId', json.data[0].id);",
+                  "    pm.environment.set('trackingNo', json.data[0].trackingNo);",
+                  "    console.log('orderId saved:', json.data[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders?page=1&limit=20",
+              "host": ["{{baseUrl}}"], "path": ["api", "orders"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "status", "value": "PENDING", "disabled": true, "description": "PENDING|CONFIRMED|PACKED|IN_TRANSIT|OUT_FOR_DELIVERY|DELIVERED|RETURNED|CANCELLED" },
+                { "key": "search", "value": "", "disabled": true, "description": "Tìm theo trackingNo, tên khách, SĐT" },
+                { "key": "fromDate", "value": "2026-01-01", "disabled": true },
+                { "key": "toDate", "value": "2026-12-31", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get order by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/orders/{{orderId}}", "host": ["{{baseUrl}}"], "path": ["api", "orders", "{{orderId}}"] }
+          }
+        },
+        {
+          "name": "Track by trackingNo (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/orders/track/{{trackingNo}}", "host": ["{{baseUrl}}"], "path": ["api", "orders", "track", "{{trackingNo}}"] }
+          }
+        },
+        {
+          "name": "Create order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success) {",
+                  "    pm.environment.set('orderId', json.data.id);",
+                  "    pm.environment.set('trackingNo', json.data.trackingNo);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"shippingAddress\": \"123 Nguyễn Văn Linh, Q7, TP.HCM\",\n  \"notes\": \"Giao giờ hành chính\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"quantity\": 2,\n      \"unitPrice\": 150000\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/orders", "host": ["{{baseUrl}}"], "path": ["api", "orders"] }
+          }
+        },
+        {
+          "name": "Update order",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shippingAddress\": \"456 Lê Văn Việt, Q9, TP.HCM\",\n  \"notes\": \"Cập nhật địa chỉ giao\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/orders/{{orderId}}", "host": ["{{baseUrl}}"], "path": ["api", "orders", "{{orderId}}"] }
+          }
+        },
+        {
+          "name": "Delete order (ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/orders/{{orderId}}", "host": ["{{baseUrl}}"], "path": ["api", "orders", "{{orderId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delivery",
+      "item": [
+        {
+          "name": "In-transit orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/delivery/in-transit", "host": ["{{baseUrl}}"], "path": ["api", "delivery", "in-transit"] }
+          }
+        },
+        {
+          "name": "Delivery history (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/delivery/{{orderId}}/history", "host": ["{{baseUrl}}"], "path": ["api", "delivery", "{{orderId}}", "history"] }
+          }
+        },
+        {
+          "name": "Update delivery status",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\",\n  \"location\": \"Kho Sóng Thần, Bình Dương\",\n  \"note\": \"Đã xác nhận đơn hàng\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/delivery/{{orderId}}", "host": ["{{baseUrl}}"], "path": ["api", "delivery", "{{orderId}}"] }
+          }
+        },
+        {
+          "name": "Bulk update status",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"updates\": [\n    {\n      \"orderId\": \"{{orderId}}\",\n      \"status\": \"PACKED\",\n      \"location\": \"Kho HCM\",\n      \"note\": \"Đóng gói xong\"\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/delivery/bulk-update", "host": ["{{baseUrl}}"], "path": ["api", "delivery", "bulk-update"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "List inventory",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory?page=1&limit=50",
+              "host": ["{{baseUrl}}"], "path": ["api", "inventory"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "50" },
+                { "key": "warehouseId", "value": "{{warehouseId}}", "disabled": true },
+                { "key": "lowStockOnly", "value": "true", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Low stock alerts",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/inventory/low-stock", "host": ["{{baseUrl}}"], "path": ["api", "inventory", "low-stock"] }
+          }
+        },
+        {
+          "name": "Stock movements",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory/movements?page=1&limit=50",
+              "host": ["{{baseUrl}}"], "path": ["api", "inventory", "movements"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "50" },
+                { "key": "inventoryId", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Inventory by product",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/inventory/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api", "inventory", "{{productId}}"] }
+          }
+        },
+        {
+          "name": "Adjust stock (single)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 50,\n  \"reason\": \"Nhập hàng từ nhà cung cấp\",\n  \"referenceNo\": \"PO-2026-001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory/{{productId}}/warehouse/{{warehouseId}}",
+              "host": ["{{baseUrl}}"], "path": ["api", "inventory", "{{productId}}", "warehouse", "{{warehouseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Bulk adjust stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adjustments\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"warehouseId\": \"{{warehouseId}}\",\n      \"quantity\": 100,\n      \"reason\": \"Nhập kho định kỳ\",\n      \"referenceNo\": \"PO-2026-002\"\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/inventory/bulk-adjust", "host": ["{{baseUrl}}"], "path": ["api", "inventory", "bulk-adjust"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "List products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data.length > 0) {",
+                  "    pm.environment.set('productId', json.data[0].id);",
+                  "    console.log('productId saved:', json.data[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?page=1&limit=50",
+              "host": ["{{baseUrl}}"], "path": ["api", "products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "50" },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create product (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"SKU-NEW-001\",\n  \"name\": \"Sản phẩm mới\",\n  \"description\": \"Mô tả sản phẩm\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"unitPrice\": 250000,\n  \"unit\": \"thùng\",\n  \"weight\": 5.5,\n  \"hsCode\": \"1234.56.00\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api", "products"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Warehouses",
+      "item": [
+        {
+          "name": "List warehouses",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data.length > 0) {",
+                  "    pm.environment.set('warehouseId', json.data[0].id);",
+                  "    console.log('warehouseId saved:', json.data[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/warehouses", "host": ["{{baseUrl}}"], "path": ["api", "warehouses"] }
+          }
+        },
+        {
+          "name": "Create warehouse (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WH-HN-01\",\n  \"name\": \"Kho Hà Nội\",\n  \"address\": \"KCN Thăng Long, Đông Anh\",\n  \"city\": \"Hà Nội\",\n  \"type\": \"GENERAL\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/warehouses", "host": ["{{baseUrl}}"], "path": ["api", "warehouses"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "List customers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data.length > 0) {",
+                  "    pm.environment.set('customerId', json.data[0].id);",
+                  "    console.log('customerId saved:', json.data[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers?page=1&limit=20",
+              "host": ["{{baseUrl}}"], "path": ["api", "customers"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "search", "value": "", "disabled": true, "description": "Tìm theo tên, email, SĐT" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get customer by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/customers/{{customerId}}", "host": ["{{baseUrl}}"], "path": ["api", "customers", "{{customerId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delivery Runs",
+      "item": [
+        {
+          "name": "Drivers — List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data.length > 0) {",
+                  "    pm.environment.set('driverId', json.data[0].id);",
+                  "    console.log('driverId saved:', json.data[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/delivery-runs/drivers", "host": ["{{baseUrl}}"], "path": ["api", "delivery-runs", "drivers"] }
+          }
+        },
+        {
+          "name": "Drivers — Create",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success) {",
+                  "    pm.environment.set('driverId', json.data.id);",
+                  "    console.log('driverId saved:', json.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nguyễn Văn Tài\",\n  \"phone\": \"0912345678\",\n  \"vehicleNo\": \"51C-12345\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/delivery-runs/drivers", "host": ["{{baseUrl}}"], "path": ["api", "delivery-runs", "drivers"] }
+          }
+        },
+        {
+          "name": "Runs — List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data.length > 0) {",
+                  "    pm.environment.set('runId', json.data[0].id);",
+                  "    console.log('runId saved:', json.data[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/delivery-runs", "host": ["{{baseUrl}}"], "path": ["api", "delivery-runs"] }
+          }
+        },
+        {
+          "name": "Runs — Create",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success) {",
+                  "    pm.environment.set('runId', json.data.id);",
+                  "    console.log('runId saved:', json.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Chuyến HCM sáng 17/06\",\n  \"driverId\": \"{{driverId}}\",\n  \"date\": \"2026-06-17\",\n  \"notes\": \"Giao khu Q7 và Q9\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/delivery-runs", "host": ["{{baseUrl}}"], "path": ["api", "delivery-runs"] }
+          }
+        },
+        {
+          "name": "Runs — Get by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/delivery-runs/{{runId}}", "host": ["{{baseUrl}}"], "path": ["api", "delivery-runs", "{{runId}}"] }
+          }
+        },
+        {
+          "name": "Runs — Add orders",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderIds\": [\"{{orderId}}\"]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/delivery-runs/{{runId}}/orders", "host": ["{{baseUrl}}"], "path": ["api", "delivery-runs", "{{runId}}", "orders"] }
+          }
+        },
+        {
+          "name": "Runs — Remove order",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Cookie", "value": "token={{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/delivery-runs/{{runId}}/orders/{{orderId}}", "host": ["{{baseUrl}}"], "path": ["api", "delivery-runs", "{{runId}}", "orders", "{{orderId}}"] }
+          }
+        },
+        {
+          "name": "Runs — Update status (IN_PROGRESS)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/delivery-runs/{{runId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "delivery-runs", "{{runId}}", "status"] }
+          }
+        },
+        {
+          "name": "Runs — Update status (COMPLETED)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/delivery-runs/{{runId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "delivery-runs", "{{runId}}", "status"] }
+          }
+        },
+        {
+          "name": "Runs — Cancel",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "token={{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/delivery-runs/{{runId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "delivery-runs", "{{runId}}", "status"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          }
+        }
+      ]
+    }
+  ]
+}

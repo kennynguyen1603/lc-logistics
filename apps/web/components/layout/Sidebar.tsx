@@ -14,6 +14,7 @@ import {
 import { cn } from "@workspace/ui/lib/utils"
 import { useAuthStore } from "@/stores/auth.store"
 import { Button } from "@workspace/ui/components/button"
+import { ThemeToggle } from "@/components/ui/ThemeToggle"
 
 const STAFF_NAV = [
   { href: "/admin/orders", label: "Đơn hàng", icon: Package },
@@ -65,10 +66,13 @@ export function Sidebar() {
       </nav>
 
       {/* User section */}
-      <div className="border-t p-3">
-        <div className="mb-2 px-1">
-          <p className="text-xs font-medium truncate">{user?.fullName}</p>
-          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+      <div className="border-t p-3 space-y-2">
+        <div className="flex items-center gap-2 px-1">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium truncate">{user?.fullName}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+          </div>
+          <ThemeToggle />
         </div>
         <Button
           variant="ghost"

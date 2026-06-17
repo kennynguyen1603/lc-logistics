@@ -19,6 +19,10 @@ import customersRoutes from "./routes/customers.routes"
 
 const app: Express = express()
 
+// Render (and most PaaS) sit behind a reverse proxy that sets X-Forwarded-For.
+// Trust one hop so express-rate-limit can read the real client IP.
+if (env.NODE_ENV === "production") app.set("trust proxy", 1)
+
 // ── Security ──────────────────────────────────────────────────────────────────
 app.use(helmet())
 app.use(
